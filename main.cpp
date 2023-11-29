@@ -27,11 +27,6 @@ int main()
         code.close();
     }
 
-    for (lexer::Token token : tokenList)
-    {
-        cout << token.type << "; " << token.value << endl;
-    }
-
     cout << "Parsing..." << endl;
     nodeProg prog = parser::parse(&tokenList);
 

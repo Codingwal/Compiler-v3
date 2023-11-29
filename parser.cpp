@@ -57,7 +57,7 @@ namespace parser
         Token foundToken = consume();
         if (foundToken.type != type)
         {
-            cout << "Expected token of type '" << lexer::tokenNames[type] << "', found token of type '" << lexer::tokenNames[foundToken.type] << "'" << endl;
+            cout << "Expected token of type '" << lexer::tokenNames[type] << "', found token of type '" << lexer::tokenNames[foundToken.type] << "' at " << index << endl;
             throw;
         }
         return foundToken;
@@ -66,14 +66,8 @@ namespace parser
     nodeExpr parseExpr()
     {
         nodeExpr expr;
-        Token t = consume();
-        if (t.type != TokenType::int_lit)
-        {
-            cout "Invalid token type. Expected in"
-        }
-        expr.int_lit = t.value;
-        if ()
-            return expr;
+        expr.int_lit = tryConsume(TokenType::int_lit).value;
+        return expr;
     }
 
     nodeScope parseScope()
@@ -107,10 +101,29 @@ namespace parser
             else if (peek().type == TokenType::custom && peek(2).type == TokenType::equal)
             {
                 // nodeVarAssign
+                nodeVarAssign assign;
+                assign.varName = consume().value;
+                consume();
+                assign.expr = parseExpr();
+                tryConsume(TokenType::semicolon);
+                scope.body.push_back(assign);
             }
             else if (peek().type == TokenType::custom && peek(2).type == TokenType::open_paren)
             {
                 // nodeFuncCall
+                nodeFuncCall call;
+                call.funcName = consume().value;
+                consume();
+                // TODO: implement parameter parsing
+                tryConsume(TokenType::close_paren);
+                tryConsume(TokenType::semicolon);
+                scope.body.push_back(call);
+            }
+            else
+            {
+                cout << "[ERROR]: Invalid statement in scope at token " << index << endl;
+                cout << tokenNames[peek().type] << "; " << peek().value << endl;
+                throw;
             }
             // scope.body.push_back(stmt);
         }
