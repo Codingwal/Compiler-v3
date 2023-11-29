@@ -52,20 +52,28 @@ namespace parser
         return tokens->at(index);
     }
 
-    void tryConsume(TokenType type)
+    Token tryConsume(TokenType type)
     {
-        TokenType foundToken = consume().type;
-        if (foundToken != type)
+        Token foundToken = consume();
+        if (foundToken.type != type)
         {
-            cout << "Expected token of type '" << lexer::tokenNames[type] << "', found token of type '" << lexer::tokenNames[foundToken] << "'" << endl;
+            cout << "Expected token of type '" << lexer::tokenNames[type] << "', found token of type '" << lexer::tokenNames[foundToken.type] << "'" << endl;
             throw;
         }
+        return foundToken;
     }
 
     nodeExpr parseExpr()
     {
         nodeExpr expr;
-        return expr;
+        Token t = consume();
+        if (t.type != TokenType::int_lit)
+        {
+            cout "Invalid token type. Expected in"
+        }
+        expr.int_lit = t.value;
+        if ()
+            return expr;
     }
 
     nodeScope parseScope()
@@ -83,7 +91,7 @@ namespace parser
                 decl.varType = consume().value;
                 decl.varName = consume().value;
                 consume();
-                scope.body.push_back(&decl);
+                scope.body.push_back(decl);
             }
             else if (peek().type == TokenType::custom && peek(2).type == TokenType::custom && peek(3).type == TokenType::equal)
             {
@@ -92,10 +100,9 @@ namespace parser
                 def.varType = consume().value;
                 def.varName = consume().value;
                 consume();
-                nodeExpr expr = parseExpr();
-                def.expr = &expr;
+                def.expr = parseExpr();
                 tryConsume(TokenType::semicolon);
-                scope.body.push_back(&def);
+                scope.body.push_back(def);
             }
             else if (peek().type == TokenType::custom && peek(2).type == TokenType::equal)
             {
@@ -127,17 +134,16 @@ namespace parser
             nodeVarDecl decl;
             decl.varType = paramType;
             decl.varName = paramName;
-            funcDef.params.push_back(&decl);
+            funcDef.params.push_back(decl);
 
             if (peek().type == TokenType::close_paren)
-            {   
+            {
                 break;
             };
             tryConsume(TokenType::comma);
         };
         consume();
-        nodeScope scope = parseScope();
-        funcDef.body = &scope;
+        funcDef.body = parseScope();
 
         return funcDef;
     }
@@ -156,7 +162,7 @@ namespace parser
             }
             else if (peek(3).type == TokenType::open_paren)
             {
-                prog.stmts.push_back(parseFuncDef());sadsd
+                prog.stmts.push_back(parseFuncDef());
             }
             else
             {

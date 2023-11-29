@@ -19,21 +19,21 @@ namespace parser
     {
         string varType;
         string varName;
-        nodeExpr* expr;;
+        nodeExpr expr;;
     };
     struct nodeVarAssign
     {
         string varName;
-        nodeExpr* expr;;
+        nodeExpr expr;;
     };
     struct nodeFuncCall
     {
         string funcName;
-        vector<nodeExpr*> params;
+        vector<nodeExpr> params;
     };
     struct nodeScope
     {
-        vector<variant<nodeVarDecl*, nodeVarDef*, nodeVarAssign*, nodeFuncCall*>> body;
+        vector<variant<nodeVarDecl, nodeVarDef, nodeVarAssign, nodeFuncCall>> body;
     };
     
     struct nodeStructDef
@@ -44,11 +44,11 @@ namespace parser
     {
         string returnType;
         string funcName;
-        vector<nodeVarDecl*> params;
-        nodeScope* body;
+        vector<nodeVarDecl> params;
+        nodeScope body;
     };
     struct nodeProg
     {
-        vector<variant<nodeFuncDef*, nodeStructDef*>> stmts;
+        vector<variant<nodeFuncDef, nodeStructDef>> stmts;
     };
 }

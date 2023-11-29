@@ -6,26 +6,36 @@ using namespace parser;
 
 namespace generator
 {
-    void generateScope(nodeScope *scope)
+    void generateVarDecl(nodeVarDecl decl)
     {
-        cout << "scope" << endl;
+        cout << "varDecl" << endl;
     }
-    void generateFuncDef(nodeFuncDef *def)
+    void generateScope(nodeScope scope)
     {
-        generateScope(def->body);
-
-        cout << "funcDef: name: " << def->funcName << ", returnType: " << def->returnType << endl;
-    }
-    void generate(nodeProg *prog)
-    {
-        cout << prog->stmts.size() << endl;
-        for (auto stmt : prog->stmts)
+        for (auto stmt : scope.body)
         {
-            cout << stmt.index() << endl;
             switch ((int)stmt.index())
             {
             case 0:
-                generateFuncDef(get<nodeFuncDef*>(stmt));
+                generateVarDecl(get<nodeVarDecl>(stmt));
+            }
+        }
+        cout << "scope" << endl;
+    }
+    void generateFuncDef(nodeFuncDef def)
+    {
+        generateScope(def.body);
+
+        cout << "funcDef: name: " << def.funcName << ", returnType: " << def.returnType << endl;
+    }
+    void generate(nodeProg prog)
+    {
+        for (auto stmt : prog.stmts)
+        {
+            switch ((int)stmt.index())
+            {
+            case 0:
+                generateFuncDef(get<nodeFuncDef>(stmt));
                 break;
             default:
                 throw;

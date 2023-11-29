@@ -36,7 +36,7 @@ int main()
     nodeProg prog = parser::parse(&tokenList);
 
     cout << "Generating..." << endl;
-    generator::generate(&prog);
+    generator::generate(prog);
     
     return 0;
 }
