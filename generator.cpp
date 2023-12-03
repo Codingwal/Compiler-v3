@@ -25,7 +25,11 @@ namespace generator
         int stackPos;
     };
 
-    map<string, typeData> types;
+    map<string, typeData> types = 
+    {
+        {"int", {.typeName = "int"}},
+        {"void", {.typeName = "void"}},
+    };
     map<string, funcData> funcs;
     vector<varData> vars;
 
@@ -65,37 +69,51 @@ namespace generator
         cout << "[ERROR]: Variable '" << varName << "' was not defined in this scope." << endl;
         throw;
     }
+    void createVar(string varName, string varType)
+    {
+        vars.push_back({.varName = varName, .varType = getType(varType), .stackPos = stackPointer});
+    }
     void generateExpr(nodeExpr expr)
     {
-        cout << "expr: " << expr.int_lit << endl;
+        output << "    ; expr\n";
     }
     void generateVarDecl(nodeVarDecl decl)
     {
         // Reserve space for var
+        output << "    ; varDecl\n";
         push("0");
-        varData var;
-        var.varName = decl.varName;
-        var.varType = getType(decl.varType);
-        var.stackPos = stackPointer;
-        vars.push_back(var);
+
+        createVar(decl.varName, decl.varType);
+
         return;
     }
     void generateVarDef(nodeVarDef def)
     {
+        output << "    ; varDef\n";
         generateExpr(def.expr);
-        cout << "varDef: name: " << def.varName << ", type: " << def.varType << endl;
+
+        createVar(def.varName, def.varType);
+
+        return;
     }
     void generateVarAssign(nodeVarAssign assign)
     {
+        output << "    ; varAssign\n";
         generateExpr(assign.expr);
-        cout << "varAssign: name: " << assign.varName << endl;
+
+        varData *varData = getVar(assign.varName);
+        pop("rax");
+
+        int varOffset = varData->stackPos - stackPointer;
+        output << "    mov [rsp + " << varOffset << "], rax\n";
     }
     void generateFuncCall(nodeFuncCall call)
     {
-        cout << "funcCall: name: " << call.funcName << endl;
+        output << "    ; funcCall\n";
     }
     void generateScope(nodeScope scope)
     {
+        output << "    ; scope\n";
         for (auto stmt : scope.body)
         {
             switch ((int)stmt.index())
@@ -114,15 +132,13 @@ namespace generator
                 break;
             }
         }
-        cout << "scope" << endl;
     }
     void generateFuncDef(nodeFuncDef def)
     {
+        output << "    ; funcDef\n";
         generateScope(def.body);
-
-        cout << "funcDef: name: " << def.funcName << ", returnType: " << def.returnType << endl;
     }
-    void generate(nodeProg prog)
+    string generate(nodeProg prog)
     {
         for (auto stmt : prog.stmts)
         {
@@ -135,5 +151,7 @@ namespace generator
                 throw;
             }
         }
+
+        return output.str();
     }
 }

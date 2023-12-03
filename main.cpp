@@ -31,7 +31,14 @@ int main()
     nodeProg prog = parser::parse(&tokenList);
 
     cout << "Generating..." << endl;
-    generator::generate(prog);
+    string output = generator::generate(prog);
+
+    code.open("code.asm", ios::out);
+    if (code.is_open())
+    {
+        code << output;
+    }
+    code.close();
     
     return 0;
 }
