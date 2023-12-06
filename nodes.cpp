@@ -6,9 +6,21 @@ using namespace std;
 
 namespace parser
 {
+    enum binOp
+    {
+        equal,
+        is_equal,
+
+        add,
+        sub,
+        mult,
+        div,
+        mod
+    }
     struct nodeExpr;
     struct nodeBinExpr
     {
+        binOp op;
         nodeExpr *lhs;
         nodeExpr *rhs;
     };

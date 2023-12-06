@@ -5,6 +5,7 @@
 #include <optional>
 using namespace std;
 
+#include "errorHandler.cpp"
 #include "nodes.cpp"
 #include "lexer.cpp"
 using namespace lexer;
@@ -35,8 +36,7 @@ namespace parser
     {
         if (!tokensLeft())
         {
-            std::cout << "[ERROR]: Unexpected end of file" << endl;
-            throw;
+            errorHandler::error("Unexpected end of file.");
         }
         return tokens->at(index + ahead);
     }
@@ -45,8 +45,7 @@ namespace parser
     {
         if (!tokensLeft())
         {
-            cout << "[ERROR]: Unexpected end of file" << endl;
-            throw;
+            errorHandler::error("Unexpected end of file.");
         }
         index++;
         return tokens->at(index);
@@ -57,8 +56,7 @@ namespace parser
         Token foundToken = consume();
         if (foundToken.type != type)
         {
-            cout << "Expected token of type '" << lexer::tokenNames[type] << "', found token of type '" << lexer::tokenNames[foundToken.type] << "' at " << index << endl;
-            throw;
+            errorHandler::error("Expected token of type '" + lexer::tokenNames[type] + "', found token of type '" + lexer::tokenNames[foundToken.type] + "' at " + to_string(index));
         }
         return foundToken;
     }
@@ -72,12 +70,11 @@ namespace parser
         }
         else if (peek().type == TokenType::custom)
         {
-            expr.expr = ident {.ident = tryConsume(TokenType::custom).value};
+            expr.expr = ident{.ident = tryConsume(TokenType::custom).value};
         }
         else
         {
-            cout << "[ERROR]: Invalid expression.\n";
-            throw;
+            errorHandler::error("Invalid expression.");
         }
 
         return expr;
@@ -146,9 +143,7 @@ namespace parser
             }
             else
             {
-                cout << "[ERROR]: Invalid statement in scope at token " << index << endl;
-                cout << tokenNames[peek().type] << "; " << peek().value << endl;
-                throw;
+                errorHandler::error("Invalid statement in scope at token " + index);
             }
             // scope.body.push_back(stmt);
         }
@@ -204,8 +199,7 @@ namespace parser
             }
             else
             {
-                cout << "[ERROR]: Invalid statement in prog at token " << index << endl;
-                exit(EXIT_FAILURE);
+                errorHandler::error("Invalid statement in prog at token " + index);
             }
         }
 

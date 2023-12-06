@@ -4,6 +4,7 @@
 #include <map>
 using namespace std;
 
+#include "errorHandler.cpp"
 #include "parser.cpp"
 using namespace parser;
 
@@ -54,8 +55,7 @@ namespace generator
     {
         if (types.count(varType) == 0)
         {
-            cout << "[ERROR]: Type '" << varType << "' was not defined." << endl;
-            throw;
+            errorHandler::error("Type '" + varType + "' was not defined.");
         }
         return &types[varType];
     }
@@ -69,8 +69,8 @@ namespace generator
                 return var;
             }
         }
-        cout << "[ERROR]: Variable '" << varName << "' was not defined in this scope." << endl;
-        throw;
+        errorHandler::error("Variable '" + varName + "' was not defined in this scope.");
+        return NULL;
     }
     void createVar(string varName, string varType, int stackPos)
     {
@@ -95,8 +95,7 @@ namespace generator
         }
         case 2:
             // bin_expr
-            cout << "[ERROR]: Not implemented!\n";
-            throw;
+            errorHandler::error("Not implemented!");
             break;
         default:
             break;
@@ -138,8 +137,7 @@ namespace generator
     {
         if (funcs.count(call.funcName) == 0)
         {
-            cout << "[ERROR]: Function was not declared\n";
-            throw;
+            errorHandler::error("Function " + call.funcName + " was not declared.");
         }
         output << "    ; funcCall\n";
         for (nodeExpr expr : call.params)

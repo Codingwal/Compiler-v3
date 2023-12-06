@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 
+#include "errorHandler.cpp"
+
 namespace lexer
 {
     enum TokenType
@@ -104,8 +106,7 @@ namespace lexer
     {
         if (!charsLeft())
         {
-            cout << "[ERROR]: Unexpected end of line" << endl;
-            throw;
+            errorHandler::error("Unexpected end of line.");
         }
         lineIndex++;
         char c = line->at(lineIndex);
@@ -194,8 +195,7 @@ namespace lexer
                         }
                         else
                         {
-                            cout << "[ERROR]: Invalid symbol '" << c << "'" << endl;
-                            throw;
+                            errorHandler::error(string("Invalid symbol '") + c + "'.");
                         }
                     }
                 }
@@ -203,7 +203,7 @@ namespace lexer
             }
             else
             {
-                cout << "[ERROR]: Invalid character '" << c << "'\n";
+                errorHandler::error(string("Invalid character '") + c + "'.");
             }
         }
     }

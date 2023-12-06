@@ -23,14 +23,24 @@ exit:
 myFunc:
     ; funcCall
     ; expr
-    push qword [rsp + 16]
+    push qword [rsp + 8]
     call exit
 
 ; funcDef
 main:
-    ; funcCall
-    ; expr
-    push qword 10
     ; expr
     push qword 20
+    ; varDef
+    ; expr
+    push qword 0
+    ; varDef
+    ; expr
+    push qword [rsp + 8]
+    ; varDef
+    ; expr
+    push qword 15
+    ; varDef
+    ; funcCall
+    ; expr
+    push qword [rsp + 8]
     call myFunc

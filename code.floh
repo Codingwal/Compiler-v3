@@ -1,9 +1,13 @@
-void myFunc(int x, int y)
+void myFunc(int x)
 {
     exit(x);
 }
 
 int main()
 {
-    myFunc(10, 20);
+    int x = 20;
+    int y = 0;
+    int z = x;
+    int w = 15;
+    myFunc(z);
 }
