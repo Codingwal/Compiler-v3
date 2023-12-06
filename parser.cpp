@@ -66,7 +66,20 @@ namespace parser
     nodeExpr parseExpr()
     {
         nodeExpr expr;
-        expr.int_lit = tryConsume(TokenType::int_lit).value;
+        if (peek().type == TokenType::int_lit)
+        {
+            expr.expr = tryConsume(TokenType::int_lit).value;
+        }
+        else if (peek().type == TokenType::custom)
+        {
+            expr.expr = ident {.ident = tryConsume(TokenType::custom).value};
+        }
+        else
+        {
+            cout << "[ERROR]: Invalid expression.\n";
+            throw;
+        }
+
         return expr;
     }
 
@@ -84,7 +97,7 @@ namespace parser
                 nodeVarDecl decl;
                 decl.varType = consume().value;
                 decl.varName = consume().value;
-                consume();
+                tryConsume(TokenType::semicolon);
                 scope.body.push_back(decl);
             }
             else if (peek().type == TokenType::custom && peek(2).type == TokenType::custom && peek(3).type == TokenType::equal)
@@ -93,7 +106,7 @@ namespace parser
                 nodeVarDef def;
                 def.varType = consume().value;
                 def.varName = consume().value;
-                consume();
+                tryConsume(TokenType::equal);
                 def.expr = parseExpr();
                 tryConsume(TokenType::semicolon);
                 scope.body.push_back(def);
@@ -103,7 +116,7 @@ namespace parser
                 // nodeVarAssign
                 nodeVarAssign assign;
                 assign.varName = consume().value;
-                consume();
+                tryConsume(TokenType::equal);
                 assign.expr = parseExpr();
                 tryConsume(TokenType::semicolon);
                 scope.body.push_back(assign);
@@ -113,8 +126,20 @@ namespace parser
                 // nodeFuncCall
                 nodeFuncCall call;
                 call.funcName = consume().value;
-                consume();
-                // TODO: implement parameter parsing
+                tryConsume(TokenType::open_paren);
+
+                // Parse parameters
+                while (peek().type != TokenType::close_paren)
+                {
+                    call.params.push_back(parseExpr());
+
+                    if (peek().type == TokenType::close_paren)
+                    {
+                        break;
+                    };
+                    tryConsume(TokenType::comma);
+                };
+
                 tryConsume(TokenType::close_paren);
                 tryConsume(TokenType::semicolon);
                 scope.body.push_back(call);

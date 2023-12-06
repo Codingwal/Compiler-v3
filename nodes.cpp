@@ -5,10 +5,20 @@
 using namespace std;
 
 namespace parser
-{   
+{
+    struct nodeExpr;
+    struct nodeBinExpr
+    {
+        nodeExpr *lhs;
+        nodeExpr *rhs;
+    };
+    struct ident
+    {
+        string ident;
+    };
     struct nodeExpr
     {
-        string int_lit;
+        variant<string, ident, nodeBinExpr> expr;
     };
     struct nodeVarDecl
     {
@@ -19,12 +29,14 @@ namespace parser
     {
         string varType;
         string varName;
-        nodeExpr expr;;
+        nodeExpr expr;
+        ;
     };
     struct nodeVarAssign
     {
         string varName;
-        nodeExpr expr;;
+        nodeExpr expr;
+        ;
     };
     struct nodeFuncCall
     {
@@ -35,10 +47,9 @@ namespace parser
     {
         vector<variant<nodeVarDecl, nodeVarDef, nodeVarAssign, nodeFuncCall>> body;
     };
-    
+
     struct nodeStructDef
     {
-
     };
     struct nodeFuncDef
     {

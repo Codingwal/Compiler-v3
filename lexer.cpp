@@ -201,6 +201,10 @@ namespace lexer
                 }
                 buffer.clear();
             }
+            else
+            {
+                cout << "[ERROR]: Invalid character '" << c << "'\n";
+            }
         }
     }
 }

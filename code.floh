@@ -1,10 +1,9 @@
+void myFunc(int x, int y)
+{
+    exit(x);
+}
+
 int main()
 {
-    int x = 10;
-    x = 20;
-    cool();
-}
-void cool()
-{
-
+    myFunc(10, 20);
 }

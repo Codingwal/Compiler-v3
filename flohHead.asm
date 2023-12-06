@@ -18,19 +18,3 @@ exit:
 
 ; code section
 
-
-; funcDef
-myFunc:
-    ; funcCall
-    ; expr
-    push qword [rsp + 16]
-    call exit
-
-; funcDef
-main:
-    ; funcCall
-    ; expr
-    push qword 10
-    ; expr
-    push qword 20
-    call myFunc

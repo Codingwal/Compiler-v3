@@ -33,12 +33,19 @@ int main()
     cout << "Generating..." << endl;
     string output = generator::generate(prog);
 
-    code.open("code.asm", ios::out);
-    if (code.is_open())
-    {
-        code << output;
-    }
-    code.close();
+    ofstream outputAsm("code.asm");
+    ifstream flohHeadAsm("flohHead.asm");
+
+    outputAsm << flohHeadAsm.rdbuf();
+    outputAsm << output;
+
+    // code.open("code.asm", ios::out);
+    // if (code.is_open())
+    // {
+    //     code << output;
+    // }
+    // code.close();
+    cout << "Done!\n";
     
     return 0;
 }

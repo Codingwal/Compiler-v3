@@ -25,12 +25,15 @@ namespace generator
         int stackPos;
     };
 
-    map<string, typeData> types = 
-    {
-        {"int", {.typeName = "int"}},
-        {"void", {.typeName = "void"}},
+    map<string, typeData> types =
+        {
+            {"int", {.typeName = "int"}},
+            {"void", {.typeName = "void"}},
     };
-    map<string, funcData> funcs;
+    map<string, funcData> funcs =
+        {
+            {"exit", {.funcName = "exit", .returnType = &types["void"]}},
+    };
     vector<varData> vars;
 
     int stackPointer;
@@ -40,14 +43,14 @@ namespace generator
     void push(string reg)
     {
         output << "    push " << reg << endl;
-        stackPointer--;
+        stackPointer -= 8;
     }
     void pop(string reg)
     {
         output << "    pop " << reg << endl;
-        stackPointer++;
+        stackPointer += 8;
     }
-    typeData* getType(string varType)
+    typeData *getType(string varType)
     {
         if (types.count(varType) == 0)
         {
@@ -56,11 +59,11 @@ namespace generator
         }
         return &types[varType];
     }
-    varData* getVar(string varName)
+    varData *getVar(string varName)
     {
         for (int i = 0; i < vars.size(); i++)
         {
-            varData* var = &vars[i];
+            varData *var = &vars[i];
             if (var->varName == varName)
             {
                 return var;
@@ -69,13 +72,35 @@ namespace generator
         cout << "[ERROR]: Variable '" << varName << "' was not defined in this scope." << endl;
         throw;
     }
-    void createVar(string varName, string varType)
+    void createVar(string varName, string varType, int stackPos)
     {
-        vars.push_back({.varName = varName, .varType = getType(varType), .stackPos = stackPointer});
+        vars.push_back({.varName = varName, .varType = getType(varType), .stackPos = stackPos});
     }
+
     void generateExpr(nodeExpr expr)
     {
         output << "    ; expr\n";
+        switch (static_cast<int>(expr.expr.index()))
+        {
+        case 0:
+            // int_lit
+            push("qword " + get<string>(expr.expr));
+            break;
+        case 1:
+        {
+            // ident
+            int varStackPos = getVar(get<ident>(expr.expr).ident)->stackPos;
+            push(string("qword [rsp + ") + to_string(varStackPos - stackPointer) + "]");
+            break;
+        }
+        case 2:
+            // bin_expr
+            cout << "[ERROR]: Not implemented!\n";
+            throw;
+            break;
+        default:
+            break;
+        }
     }
     void generateVarDecl(nodeVarDecl decl)
     {
@@ -83,23 +108,25 @@ namespace generator
         output << "    ; varDecl\n";
         push("0");
 
-        createVar(decl.varName, decl.varType);
+        createVar(decl.varName, decl.varType, stackPointer);
 
         return;
     }
     void generateVarDef(nodeVarDef def)
     {
-        output << "    ; varDef\n";
         generateExpr(def.expr);
 
-        createVar(def.varName, def.varType);
+        output << "    ; varDef\n";
+
+        createVar(def.varName, def.varType, stackPointer);
 
         return;
     }
     void generateVarAssign(nodeVarAssign assign)
     {
-        output << "    ; varAssign\n";
         generateExpr(assign.expr);
+
+        output << "    ; varAssign\n";
 
         varData *varData = getVar(assign.varName);
         pop("rax");
@@ -109,11 +136,20 @@ namespace generator
     }
     void generateFuncCall(nodeFuncCall call)
     {
+        if (funcs.count(call.funcName) == 0)
+        {
+            cout << "[ERROR]: Function was not declared\n";
+            throw;
+        }
         output << "    ; funcCall\n";
+        for (nodeExpr expr : call.params)
+        {
+            generateExpr(expr);
+        }
+        output << "    call " << call.funcName << endl;
     }
     void generateScope(nodeScope scope)
     {
-        output << "    ; scope\n";
         for (auto stmt : scope.body)
         {
             switch ((int)stmt.index())
@@ -135,8 +171,22 @@ namespace generator
     }
     void generateFuncDef(nodeFuncDef def)
     {
-        output << "    ; funcDef\n";
+        funcData data = {.funcName = def.funcName, .returnType = getType(def.returnType)};
+        funcs.insert({def.funcName, data});
+        output << "\n; funcDef\n";
+        output << def.funcName << ":\n";
+        for (int i = 0; i < def.params.size(); i++)
+        {
+            nodeVarDecl param = def.params[i];
+            createVar(param.varName, param.varType, stackPointer + (def.params.size() - i) * 8);
+        }
+
         generateScope(def.body);
+
+        for (int i = 0; i < def.params.size(); i++)
+        {
+            vars.pop_back();
+        }
     }
     string generate(nodeProg prog)
     {
