@@ -1,26 +1,16 @@
 #include <vector>
 #include <variant>
 #include <string>
-
 using namespace std;
+
+#include "lexer.cpp"
 
 namespace parser
 {
-    enum binOp
-    {
-        equal,
-        is_equal,
-
-        add,
-        sub,
-        mult,
-        div,
-        mod
-    }
     struct nodeExpr;
     struct nodeBinExpr
     {
-        binOp op;
+        lexer::TokenType op;
         nodeExpr *lhs;
         nodeExpr *rhs;
     };
@@ -28,9 +18,13 @@ namespace parser
     {
         string ident;
     };
+    struct nodeTerm
+    {
+        variant<string, ident> term;
+    };
     struct nodeExpr
     {
-        variant<string, ident, nodeBinExpr> expr;
+        variant<nodeTerm, nodeBinExpr> expr;
     };
     struct nodeVarDecl
     {

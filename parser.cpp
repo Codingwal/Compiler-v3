@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <optional>
+#include <map>
 using namespace std;
 
 #include "errorHandler.cpp"
@@ -14,6 +15,14 @@ namespace parser
 {
     vector<Token> *tokens;
     int index;
+
+    map<TokenType, int> precedences =
+        {
+            {TokenType::plus, 1},
+            {TokenType::minus, 1},
+            {TokenType::star, 2},
+            {TokenType::backslash, 2},
+    };
 
     bool tokensLeft(int ahead = 1)
     {
@@ -61,23 +70,55 @@ namespace parser
         return foundToken;
     }
 
-    nodeExpr parseExpr()
+    int getPrecedence(TokenType op)
     {
-        nodeExpr expr;
+        if (precedences.count(op) == 0)
+        {
+            return -1;
+        }
+        int prec = precedences[op];
+        return prec;
+    }
+
+    nodeTerm parseTerm()
+    {
+        nodeTerm term;
         if (peek().type == TokenType::int_lit)
         {
-            expr.expr = tryConsume(TokenType::int_lit).value;
+            term.term = tryConsume(TokenType::int_lit).value;
         }
         else if (peek().type == TokenType::custom)
         {
-            expr.expr = ident{.ident = tryConsume(TokenType::custom).value};
+            term.term = ident{.ident = tryConsume(TokenType::custom).value};
         }
         else
         {
-            errorHandler::error("Invalid expression.");
+            errorHandler::error(string("Invalid term at token ") + to_string(index) + ", didn't expect token type " + to_string(peek().type));
         }
+        return term;
+    }
 
-        return expr;
+    nodeExpr parseExpr(int minPrec = 0)
+    {
+        nodeExpr lhs = nodeExpr {.expr = parseTerm()};
+
+        while (true)
+        {
+            nodeBinExpr binExpr;
+
+            int prec = getPrecedence(peek().type);
+
+            if (prec < minPrec)
+                break;
+
+            binExpr.op = consume().type;
+            nodeExpr *rhs = new nodeExpr(parseExpr(prec + 1));
+            binExpr.rhs = rhs;
+            binExpr.lhs = new nodeExpr(lhs);
+
+            lhs.expr = binExpr;
+        }
+        return lhs;
     }
 
     nodeScope parseScope()

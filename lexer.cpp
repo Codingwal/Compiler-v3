@@ -20,6 +20,11 @@ namespace lexer
         comma,
         equal,
 
+        plus,
+        minus,
+        star,
+        backslash,
+
         _struct,
         _if,
         _while,
@@ -70,9 +75,15 @@ namespace lexer
             {")", TokenType::close_paren},
             {"{", TokenType::open_curly},
             {"}", TokenType::close_curly},
+
             {";", TokenType::semicolon},
             {",", TokenType::comma},
             {"=", TokenType::equal},
+
+            {"+", TokenType::plus},
+            {"-", TokenType::minus},
+            {"*", TokenType::star},
+            {"/", TokenType::backslash},
     };
 
     int lineIndex;
@@ -134,9 +145,15 @@ namespace lexer
         case ')':
         case '{':
         case '}':
+
         case ';':
         case ',':
         case '=':
+
+        case '+':
+        case '-':
+        case '*':
+        case '/':
             return true;
         default:
             return false;

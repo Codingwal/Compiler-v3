@@ -77,34 +77,69 @@ namespace generator
         vars.push_back({.varName = varName, .varType = getType(varType), .stackPos = stackPos});
     }
 
+    void generateTerm(nodeTerm term)
+    {
+        if (std::holds_alternative<string>(term.term))
+        {
+            push("QWORD " + get<string>(term.term));
+        }
+        else if (std::holds_alternative<ident>(term.term))
+        {
+            int varStackPos = getVar(get<ident>(term.term).ident)->stackPos;
+            push(string("QWORD [rsp + ") + to_string(varStackPos - stackPointer) + "]");
+        }
+        else
+        {
+            errorHandler::error("WTF WHERE IS MY TERM");
+        }
+    }
+
     void generateExpr(nodeExpr expr)
     {
-        output << "    ; expr\n";
-        switch (static_cast<int>(expr.expr.index()))
+        if (holds_alternative<nodeTerm>(expr.expr))
         {
-        case 0:
-            // int_lit
-            push("qword " + get<string>(expr.expr));
-            break;
-        case 1:
-        {
-            // ident
-            int varStackPos = getVar(get<ident>(expr.expr).ident)->stackPos;
-            push(string("qword [rsp + ") + to_string(varStackPos - stackPointer) + "]");
-            break;
+            generateTerm(get<nodeTerm>(expr.expr));
         }
-        case 2:
-            // bin_expr
-            errorHandler::error("Not implemented!");
-            break;
-        default:
-            break;
+        else if (holds_alternative<nodeBinExpr>(expr.expr))
+        {
+            nodeBinExpr binExpr = get<nodeBinExpr>(expr.expr);
+
+            generateExpr(*binExpr.rhs);
+            generateExpr(*binExpr.lhs);
+
+            // binExpr
+            pop("rax");
+            pop("rbx");
+
+            switch (binExpr.op)
+            {
+            case TokenType::plus:
+                output << "    add rax, rbx\n";
+                break;
+            case TokenType::minus:
+                output << "    sub rax, rbx\n";
+                break;
+            case TokenType::star:
+                output << "    imul rbx\n";
+                break;
+            case TokenType::backslash:
+                output << "    xor rdx, rdx\n";  
+                output << "    div rbx\n";
+                break;
+            default:
+                errorHandler::error("Invalid operator");
+            }
+
+            push("rax");
+        }
+        else
+        {
+            errorHandler::error("WTF");
         }
     }
     void generateVarDecl(nodeVarDecl decl)
     {
         // Reserve space for var
-        output << "    ; varDecl\n";
         push("0");
 
         createVar(decl.varName, decl.varType, stackPointer);
@@ -115,8 +150,6 @@ namespace generator
     {
         generateExpr(def.expr);
 
-        output << "    ; varDef\n";
-
         createVar(def.varName, def.varType, stackPointer);
 
         return;
@@ -124,8 +157,6 @@ namespace generator
     void generateVarAssign(nodeVarAssign assign)
     {
         generateExpr(assign.expr);
-
-        output << "    ; varAssign\n";
 
         varData *varData = getVar(assign.varName);
         pop("rax");
@@ -139,7 +170,6 @@ namespace generator
         {
             errorHandler::error("Function " + call.funcName + " was not declared.");
         }
-        output << "    ; funcCall\n";
         for (nodeExpr expr : call.params)
         {
             generateExpr(expr);
@@ -171,7 +201,6 @@ namespace generator
     {
         funcData data = {.funcName = def.funcName, .returnType = getType(def.returnType)};
         funcs.insert({def.funcName, data});
-        output << "\n; funcDef\n";
         output << def.funcName << ":\n";
         for (int i = 0; i < def.params.size(); i++)
         {

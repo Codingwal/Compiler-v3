@@ -18,29 +18,28 @@ exit:
 
 ; code section
 
-
-; funcDef
-myFunc:
-    ; funcCall
-    ; expr
-    push qword [rsp + 8]
-    call exit
-
-; funcDef
 main:
-    ; expr
-    push qword 20
-    ; varDef
-    ; expr
-    push qword 0
-    ; varDef
-    ; expr
-    push qword [rsp + 8]
-    ; varDef
-    ; expr
-    push qword 15
-    ; varDef
-    ; funcCall
-    ; expr
-    push qword [rsp + 8]
-    call myFunc
+    push QWORD 2
+    push QWORD 2
+    pop rax
+    pop rbx
+    imul rbx
+    push rax
+    push QWORD 3
+    push QWORD 6
+    pop rax
+    pop rbx
+    xor rdx, rdx
+    div rbx
+    push rax
+    push QWORD 4
+    pop rax
+    pop rbx
+    add rax, rbx
+    push rax
+    pop rax
+    pop rbx
+    add rax, rbx
+    push rax
+    push QWORD [rsp + 0]
+    call exit

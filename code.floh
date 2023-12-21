@@ -1,13 +1,5 @@
-void myFunc(int x)
-{
-    exit(x);
-}
-
 int main()
 {
-    int x = 20;
-    int y = 0;
-    int z = x;
-    int w = 15;
-    myFunc(z);
+    int x = 4 + 6 / 3 + 2 * 2;
+    exit(x);
 }
