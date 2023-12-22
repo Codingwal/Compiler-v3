@@ -19,43 +19,38 @@ exit:
 ; code section
 
 main:
-    push QWORD 4
-    push QWORD 4
+    push QWORD 5
+    push QWORD 0
+for_loop_start0:
+    push QWORD 10
+    push QWORD [rsp + 8]
     pop rax
     pop rbx
     cmp eax, ebx
-    setg al
+    setge al
     dec al
-    push rax
-    push QWORD 4
-    push QWORD 4
-    pop rax
-    pop rbx
-    cmp eax, ebx
-    setl al
-    dec al
-    push rax
-    push QWORD 3
-    push QWORD 4
-    pop rax
-    pop rbx
-    cmp eax, ebx
-    sete al
-    dec al
-    push rax
-    pop rax
-    pop rbx
-    and al, bl
-    push rax
-    pop rax
-    pop rbx
-    and al, bl
     push rax
     pop rax
     or al, al
-    jz if_stmt_end0
+    jz for_loop_end0
     push QWORD 1
-    call exit
-if_stmt_end0:
-    push QWORD 0
+    push QWORD [rsp + 8]
+    pop rax
+    pop rbx
+    add eax, ebx
+    push rax
+    pop rax
+    mov [rsp + 0], rax
+    push QWORD 1
+    push QWORD [rsp + 16]
+    pop rax
+    pop rbx
+    add eax, ebx
+    push rax
+    pop rax
+    mov [rsp + 8], rax
+    jmp for_loop_start0
+for_loop_end0:
+    pop rax
+    push QWORD [rsp + 0]
     call exit

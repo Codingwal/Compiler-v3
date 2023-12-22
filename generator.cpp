@@ -41,6 +41,7 @@ namespace generator
     vector<varData> vars;
 
     int ifStmtCount = 0;
+    int forLoopCount = 0;
 
     int stackPointer;
 
@@ -331,6 +332,27 @@ namespace generator
         generateScope(*stmt.scope);
         output << "if_stmt_end" << ifStmtNum << ":\n";
     }
+    void generateStmtFor(nodeStmtFor stmt)
+    {
+        int forLoopNum = forLoopCount;
+
+        generateVarDef(stmt.def);
+
+        output << "for_loop_start" << forLoopNum << ":\n";
+        compTypes(generateExpr(stmt.expr), getType("byte1"));
+        pop("rax");
+        output << "    or al, al\n";
+        output << "    jz for_loop_end" << forLoopNum << "\n";
+
+        generateVarAssign(stmt.assign);
+
+        generateScope(*stmt.scope);
+
+        output << "    jmp for_loop_start" << forLoopNum << "\n";
+        output << "for_loop_end" << forLoopNum << ":\n";
+        pop("rax");
+    }
+
     void generateScope(nodeScope scope)
     {
         for (auto stmt : scope.body)
@@ -354,6 +376,10 @@ namespace generator
             else if (holds_alternative<nodeStmtIf>(stmt))
             {
                 generateStmtIf(get<nodeStmtIf>(stmt));
+            }
+            else if (holds_alternative<nodeStmtFor>(stmt))
+            {
+                generateStmtFor(get<nodeStmtFor>(stmt));
             }
             else
             {

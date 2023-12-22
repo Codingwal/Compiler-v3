@@ -67,9 +67,17 @@ namespace parser
         nodeExpr expr;
         nodeScope *scope;
     };
+    struct nodeStmtFor
+    {
+        nodeVarDef def;
+        nodeExpr expr;
+        nodeVarAssign assign;
+        nodeScope *scope;
+    };
+
     struct nodeScope
     {
-        vector<variant<nodeVarDecl, nodeVarDef, nodeVarAssign, nodeFuncCall, nodeStmtIf>> body;
+        vector<variant<nodeVarDecl, nodeVarDef, nodeVarAssign, nodeFuncCall, nodeStmtIf, nodeStmtFor>> body;
     };
 
     struct nodeStructDef

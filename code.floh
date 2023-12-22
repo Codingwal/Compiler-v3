@@ -1,8 +1,10 @@
 byte4 main()
 {
-    if (4 != 3 && 4 >= 4 && 4 <= 4)
+    byte4 x = 5;
+
+    for (byte4 i = 0; i < 10; i = i + 1)
     {
-        exit(1);
+        x = x + 1;
     }
-    exit(0);
+    exit(x);
 }

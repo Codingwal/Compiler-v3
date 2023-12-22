@@ -145,6 +145,26 @@ namespace parser
         }
         return lhs;
     }
+    nodeVarDef parseVarDef()
+    {
+        nodeVarDef def;
+        def.varType = consume().value;
+        def.varName = consume().value;
+        tryConsume(TokenType::equal);
+        def.expr = parseExpr();
+        tryConsume(TokenType::semicolon);
+        return def;
+    }
+    nodeVarAssign parseVarAssign(bool skipSemicolon = false)
+    {
+        nodeVarAssign assign;
+        assign.varName = consume().value;
+        tryConsume(TokenType::equal);
+        assign.expr = parseExpr();
+        if (!skipSemicolon)
+            tryConsume(TokenType::semicolon);
+        return assign;
+    }
 
     nodeScope parseScope()
     {
@@ -166,23 +186,12 @@ namespace parser
             else if (peek().type == TokenType::custom && peek(2).type == TokenType::custom && peek(3).type == TokenType::equal)
             {
                 // nodeVarDef
-                nodeVarDef def;
-                def.varType = consume().value;
-                def.varName = consume().value;
-                tryConsume(TokenType::equal);
-                def.expr = parseExpr();
-                tryConsume(TokenType::semicolon);
-                scope.body.push_back(def);
+                scope.body.push_back(parseVarDef());
             }
             else if (peek().type == TokenType::custom && peek(2).type == TokenType::equal)
             {
                 // nodeVarAssign
-                nodeVarAssign assign;
-                assign.varName = consume().value;
-                tryConsume(TokenType::equal);
-                assign.expr = parseExpr();
-                tryConsume(TokenType::semicolon);
-                scope.body.push_back(assign);
+                scope.body.push_back(parseVarAssign());
             }
             else if (peek().type == TokenType::custom && peek(2).type == TokenType::open_paren)
             {
@@ -217,11 +226,23 @@ namespace parser
                 stmt.scope = new nodeScope(parseScope());
                 scope.body.push_back(stmt);
             }
+            else if (peek().type == TokenType::_for)
+            {
+                nodeStmtFor stmt;
+                tryConsume(TokenType::_for);
+                tryConsume(TokenType::open_paren);
+                stmt.def = parseVarDef();
+                stmt.expr = parseExpr();
+                tryConsume(TokenType::semicolon);
+                stmt.assign = parseVarAssign(true);
+                tryConsume(TokenType::close_paren);
+                stmt.scope = new nodeScope(parseScope());
+                scope.body.push_back(stmt);
+            }
             else
             {
                 errorHandler::error("Invalid statement in scope at token " + to_string(index + 1));
             }
-            // scope.body.push_back(stmt);
         }
         consume();
 
