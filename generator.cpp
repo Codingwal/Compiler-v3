@@ -94,10 +94,23 @@ namespace generator
 
     typeData *generateTerm(nodeTerm term)
     {
-        if (std::holds_alternative<string>(term.term))
+        if (std::holds_alternative<parser::int_lit>(term.term))
         {
-            push("QWORD " + get<string>(term.term));
+            push("QWORD " + get<parser::int_lit>(term.term).value);
             return getType("byte4");
+        }
+        if (std::holds_alternative<parser::bool_lit>(term.term))
+        {
+            string value = get<parser::bool_lit>(term.term).value;
+            if (value == "true")
+            {   
+                push("QWORD -1");
+            }
+            else
+            {
+                push("QWORD 0");
+            }
+            return getType("byte1");
         }
         else if (std::holds_alternative<ident>(term.term))
         {
@@ -172,6 +185,22 @@ namespace generator
             case TokenType::is_equal:
                 output << "    cmp eax, ebx\n";
                 output << "    setne al\n";
+                output << "    dec al\n";
+
+                type = getType("byte1");
+                break;
+            case TokenType::less_than:
+                output << "    cmp eax, ebx\n";
+                output << "    setge al\n";
+                output << "    dec al\n";
+
+                compTypes(lhsType, getType("byte4"));
+                compTypes(rhsType, getType("byte4"));
+                type = getType("byte1");
+                break;
+            case TokenType::greater_than:
+                output << "    cmp eax, ebx\n";
+                output << "    setle al\n";
                 output << "    dec al\n";
 
                 compTypes(lhsType, getType("byte4"));

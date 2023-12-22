@@ -19,6 +19,8 @@ namespace parser
     map<TokenType, int> precedences =
         {
             {TokenType::is_equal, 2},
+            {TokenType::less_than, 2},
+            {TokenType::greater_than, 2},
 
             {TokenType::plus, 3},
             {TokenType::minus, 3},
@@ -90,7 +92,11 @@ namespace parser
         nodeTerm term;
         if (peek().type == TokenType::int_lit)
         {
-            term.term = tryConsume(TokenType::int_lit).value;
+            term.term = int_lit{tryConsume(TokenType::int_lit).value};
+        }
+        else if (peek().type == TokenType::bool_lit)
+        {
+            term.term = bool_lit{tryConsume(TokenType::bool_lit).value};
         }
         else if (peek().type == TokenType::custom)
         {

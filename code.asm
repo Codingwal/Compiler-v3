@@ -46,6 +46,15 @@ main:
     pop rax
     pop rbx
     cmp eax, ebx
+    setle al
+    dec al
+    push rax
+    push QWORD 0
+    push QWORD [rsp + 0]
+    push QWORD [rsp + 16]
+    pop rax
+    pop rbx
+    cmp eax, ebx
     setne al
     dec al
     push rax

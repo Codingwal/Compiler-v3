@@ -7,6 +7,15 @@ using namespace std;
 
 namespace parser
 {
+    struct int_lit
+    {
+        string value;
+    };
+    struct bool_lit
+    {
+        string value;
+    };
+
     struct nodeExpr;
     struct nodeBinExpr
     {
@@ -20,7 +29,7 @@ namespace parser
     };
     struct nodeTerm
     {
-        variant<string, ident, nodeExpr *> term;
+        variant<int_lit, bool_lit, ident, nodeExpr *> term;
     };
     struct nodeExpr
     {

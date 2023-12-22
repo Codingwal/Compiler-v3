@@ -11,6 +11,7 @@ namespace lexer
     {
         custom,
         int_lit,
+        bool_lit,
 
         open_paren,
         close_paren,
@@ -26,6 +27,8 @@ namespace lexer
         backslash,
 
         is_equal,
+        less_than,
+        greater_than,
 
         _struct,
         _if,
@@ -68,6 +71,8 @@ namespace lexer
             {TokenType::backslash, "backslash"},
 
             {TokenType::is_equal, "is_equal"},
+            {TokenType::less_than, "less_than"},
+            {TokenType::greater_than, "greater_than"},
     };
 
     map<string, TokenType>
@@ -96,6 +101,8 @@ namespace lexer
             {"/", TokenType::backslash},
 
             {"==", TokenType::is_equal},
+            {"<", TokenType::less_than},
+            {">", TokenType::greater_than},
     };
 
     int lineIndex;
@@ -138,14 +145,17 @@ namespace lexer
 
     Token tokenizeBuffer(string *buffer)
     {
-        if (keywords.count(*buffer) == 0)
+        if (keywords.count(*buffer) != 0)
         {
-            return Token(TokenType::custom, *buffer);
+            return Token(keywords[*buffer], "");
+        }
+        else if(*buffer == "true" || *buffer == "false")
+        {
+            return Token(TokenType::bool_lit, *buffer);
         }
         else
         {
-            const TokenType &keyword = keywords[*buffer];
-            return Token(keyword, "");
+            return Token(TokenType::custom, *buffer);
         }
     }
 
@@ -166,6 +176,9 @@ namespace lexer
         case '-':
         case '*':
         case '/':
+
+        case '<':
+        case '>':
             return true;
         default:
             return false;
