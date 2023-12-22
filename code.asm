@@ -20,26 +20,40 @@ exit:
 
 main:
     push QWORD 2
+    push QWORD 3
+    pop rax
+    pop rbx
+    imul ebx
+    push rax
     push QWORD 2
     pop rax
     pop rbx
-    imul rbx
+    add eax, ebx
     push rax
+    push QWORD 2
     push QWORD 3
-    push QWORD 6
+    push QWORD 2
     pop rax
     pop rbx
-    xor rdx, rdx
-    div rbx
-    push rax
-    push QWORD 4
-    pop rax
-    pop rbx
-    add rax, rbx
+    add eax, ebx
     push rax
     pop rax
     pop rbx
-    add rax, rbx
+    imul ebx
     push rax
     push QWORD [rsp + 0]
+    push QWORD [rsp + 16]
+    pop rax
+    pop rbx
+    cmp eax, ebx
+    setne al
+    dec al
+    push rax
+    pop rax
+    or al, al
+    jz if_stmt_end0
+    push QWORD 1
+    call exit
+if_stmt_end0:
+    push QWORD 0
     call exit

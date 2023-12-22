@@ -25,6 +25,8 @@ namespace lexer
         star,
         backslash,
 
+        is_equal,
+
         _struct,
         _if,
         _while,
@@ -45,6 +47,7 @@ namespace lexer
     map<TokenType, string> tokenNames =
         {
             {TokenType::custom, "custom"},
+
             {TokenType::int_lit, "int_lit"},
             {TokenType::open_paren, "open_paren"},
             {TokenType::close_paren, "close_paren"},
@@ -53,11 +56,18 @@ namespace lexer
             {TokenType::semicolon, "semicolon"},
             {TokenType::comma, "comma"},
             {TokenType::equal, "equal"},
+
             {TokenType::_struct, "_struct"},
             {TokenType::_if, "_if"},
             {TokenType::_while, "_while"},
             {TokenType::_for, "_for"},
 
+            {TokenType::plus, "plus"},
+            {TokenType::minus, "minus"},
+            {TokenType::star, "star"},
+            {TokenType::backslash, "backslash"},
+
+            {TokenType::is_equal, "is_equal"},
     };
 
     map<string, TokenType>
@@ -84,6 +94,8 @@ namespace lexer
             {"-", TokenType::minus},
             {"*", TokenType::star},
             {"/", TokenType::backslash},
+
+            {"==", TokenType::is_equal},
     };
 
     int lineIndex;

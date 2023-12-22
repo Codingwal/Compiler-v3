@@ -13,10 +13,12 @@ namespace generator
     struct typeData
     {
         string typeName;
+        size_t size;
     };
     struct funcData
     {
         string funcName;
+        vector<typeData *> params;
         typeData *returnType;
     };
     struct varData
@@ -28,14 +30,17 @@ namespace generator
 
     map<string, typeData> types =
         {
-            {"int", {.typeName = "int"}},
+            {"byte4", {.typeName = "byte4", .size = 4}},
+            {"byte1", {.typeName = "byte1", .size = 1}},
             {"void", {.typeName = "void"}},
     };
     map<string, funcData> funcs =
         {
-            {"exit", {.funcName = "exit", .returnType = &types["void"]}},
+            {"exit", {.funcName = "exit", .params = {&types["byte4"]}, .returnType = &types["void"]}},
     };
     vector<varData> vars;
+
+    int ifStmtCount = 0;
 
     int stackPointer;
 
@@ -77,35 +82,59 @@ namespace generator
         vars.push_back({.varName = varName, .varType = getType(varType), .stackPos = stackPos});
     }
 
-    void generateTerm(nodeTerm term)
+    void compTypes(typeData *a, typeData *b)
+    {
+        if (a != b)
+        {
+            errorHandler::error("Types '" + a->typeName + "' and '" + b->typeName + "' do not match.");
+        }
+    }
+
+    typeData *generateExpr(nodeExpr expr);
+
+    typeData *generateTerm(nodeTerm term)
     {
         if (std::holds_alternative<string>(term.term))
         {
             push("QWORD " + get<string>(term.term));
+            return getType("byte4");
         }
         else if (std::holds_alternative<ident>(term.term))
         {
-            int varStackPos = getVar(get<ident>(term.term).ident)->stackPos;
+            varData *data = getVar(get<ident>(term.term).ident);
+            int varStackPos = data->stackPos;
             push(string("QWORD [rsp + ") + to_string(varStackPos - stackPointer) + "]");
+            return data->varType;
+        }
+        else if (std::holds_alternative<nodeExpr *>(term.term))
+        {
+            typeData *type = generateExpr(*get<nodeExpr *>(term.term));
+            free(get<nodeExpr *>(term.term));
+            return type;
         }
         else
         {
-            errorHandler::error("WTF WHERE IS MY TERM");
+            throw;
         }
     }
 
-    void generateExpr(nodeExpr expr)
+    typeData *generateExpr(nodeExpr expr)
     {
         if (holds_alternative<nodeTerm>(expr.expr))
         {
-            generateTerm(get<nodeTerm>(expr.expr));
+            return generateTerm(get<nodeTerm>(expr.expr));
         }
         else if (holds_alternative<nodeBinExpr>(expr.expr))
         {
+            typeData *type;
+
             nodeBinExpr binExpr = get<nodeBinExpr>(expr.expr);
 
-            generateExpr(*binExpr.rhs);
-            generateExpr(*binExpr.lhs);
+            typeData *lhsType = generateExpr(*binExpr.rhs);
+            typeData *rhsType = generateExpr(*binExpr.lhs);
+
+            free(binExpr.rhs);
+            free(binExpr.lhs);
 
             // binExpr
             pop("rax");
@@ -114,27 +143,53 @@ namespace generator
             switch (binExpr.op)
             {
             case TokenType::plus:
-                output << "    add rax, rbx\n";
+                output << "    add eax, ebx\n";
+
+                compTypes(lhsType, getType("byte4"));
+                compTypes(rhsType, getType("byte4"));
+                type = getType("byte4");
                 break;
             case TokenType::minus:
-                output << "    sub rax, rbx\n";
+                output << "    sub eax, ebx\n";
+
+                type = getType("byte4");
                 break;
             case TokenType::star:
-                output << "    imul rbx\n";
+                output << "    imul ebx\n";
+
+                compTypes(lhsType, getType("byte4"));
+                compTypes(rhsType, getType("byte4"));
+                type = getType("byte4");
                 break;
             case TokenType::backslash:
-                output << "    xor rdx, rdx\n";  
-                output << "    div rbx\n";
+                output << "    xor rdx, rdx\n";
+                output << "    div ebx\n";
+
+                compTypes(lhsType, getType("byte4"));
+                compTypes(rhsType, getType("byte4"));
+                type = getType("byte4");
+                break;
+            case TokenType::is_equal:
+                output << "    cmp eax, ebx\n";
+                output << "    setne al\n";
+                output << "    dec al\n";
+
+                compTypes(lhsType, getType("byte4"));
+                compTypes(rhsType, getType("byte4"));
+                type = getType("byte1");
                 break;
             default:
-                errorHandler::error("Invalid operator");
+                errorHandler::error("Invalid operator " + lexer::tokenNames.at(binExpr.op));
             }
 
             push("rax");
+
+            return type;
         }
         else
         {
             errorHandler::error("WTF");
+            return NULL;
         }
     }
     void generateVarDecl(nodeVarDecl decl)
@@ -148,7 +203,7 @@ namespace generator
     }
     void generateVarDef(nodeVarDef def)
     {
-        generateExpr(def.expr);
+        compTypes(generateExpr(def.expr), getType(def.varType));
 
         createVar(def.varName, def.varType, stackPointer);
 
@@ -156,44 +211,78 @@ namespace generator
     }
     void generateVarAssign(nodeVarAssign assign)
     {
-        generateExpr(assign.expr);
-
         varData *varData = getVar(assign.varName);
+
+        compTypes(generateExpr(assign.expr), varData->varType);
+
         pop("rax");
 
         int varOffset = varData->stackPos - stackPointer;
         output << "    mov [rsp + " << varOffset << "], rax\n";
     }
-    void generateFuncCall(nodeFuncCall call)
+    typeData *generateFuncCall(nodeFuncCall call)
     {
         if (funcs.count(call.funcName) == 0)
         {
             errorHandler::error("Function " + call.funcName + " was not declared.");
         }
-        for (nodeExpr expr : call.params)
+        funcData *data = &funcs.at(call.funcName);
+
+        if (call.params.size() < data->params.size())
         {
-            generateExpr(expr);
+            errorHandler::error("Too few arguments in function call '" + call.funcName + "'.");
         }
+        for (int i = 0; i < data->params.size(); i++)
+        {
+            compTypes(generateExpr(call.params.at(i)), data->params[i]);
+        }
+
         output << "    call " << call.funcName << endl;
+
+        return data->returnType;
+    }
+
+    void generateScope(nodeScope scope);
+
+    void generateStmtIf(nodeStmtIf stmt)
+    {
+        compTypes(generateExpr(stmt.expr), getType("byte1"));
+
+        int ifStmtNum = ifStmtCount;
+
+        pop("rax");
+        output << "    or al, al\n";
+        output << "    jz if_stmt_end" << ifStmtNum << "\n";
+        generateScope(*stmt.scope);
+        output << "if_stmt_end" << ifStmtNum << ":\n";
     }
     void generateScope(nodeScope scope)
     {
         for (auto stmt : scope.body)
         {
-            switch ((int)stmt.index())
+            if (holds_alternative<nodeVarDecl>(stmt))
             {
-            case 0:
                 generateVarDecl(get<nodeVarDecl>(stmt));
-                break;
-            case 1:
+            }
+            else if (holds_alternative<nodeVarDef>(stmt))
+            {
                 generateVarDef(get<nodeVarDef>(stmt));
-                break;
-            case 2:
+            }
+            else if (holds_alternative<nodeVarAssign>(stmt))
+            {
                 generateVarAssign(get<nodeVarAssign>(stmt));
-                break;
-            case 3:
+            }
+            else if (holds_alternative<nodeFuncCall>(stmt))
+            {
                 generateFuncCall(get<nodeFuncCall>(stmt));
-                break;
+            }
+            else if (holds_alternative<nodeStmtIf>(stmt))
+            {
+                generateStmtIf(get<nodeStmtIf>(stmt));
+            }
+            else
+            {
+                throw;
             }
         }
     }

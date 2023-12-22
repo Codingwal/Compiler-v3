@@ -20,12 +20,13 @@ namespace parser
     };
     struct nodeTerm
     {
-        variant<string, ident> term;
+        variant<string, ident, nodeExpr *> term;
     };
     struct nodeExpr
     {
         variant<nodeTerm, nodeBinExpr> expr;
     };
+
     struct nodeVarDecl
     {
         string varType;
@@ -49,9 +50,17 @@ namespace parser
         string funcName;
         vector<nodeExpr> params;
     };
+
+    struct nodeScope;
+
+    struct nodeStmtIf
+    {
+        nodeExpr expr;
+        nodeScope *scope;
+    };
     struct nodeScope
     {
-        vector<variant<nodeVarDecl, nodeVarDef, nodeVarAssign, nodeFuncCall>> body;
+        vector<variant<nodeVarDecl, nodeVarDef, nodeVarAssign, nodeFuncCall, nodeStmtIf>> body;
     };
 
     struct nodeStructDef
@@ -64,6 +73,7 @@ namespace parser
         vector<nodeVarDecl> params;
         nodeScope body;
     };
+
     struct nodeProg
     {
         vector<variant<nodeFuncDef, nodeStructDef>> stmts;

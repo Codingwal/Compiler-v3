@@ -1,5 +1,11 @@
-int main()
+byte4 main()
 {
-    int x = 4 + 6 / 3 + 2 * 2;
-    exit(x);
+    byte4 x = 2 + 3 * 2;
+    byte4 y = (2 + 3) * 2;
+    
+    if (x == y)
+    {
+        exit(1);
+    }
+    exit(0);
 }

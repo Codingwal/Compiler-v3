@@ -18,10 +18,13 @@ namespace parser
 
     map<TokenType, int> precedences =
         {
-            {TokenType::plus, 1},
-            {TokenType::minus, 1},
-            {TokenType::star, 2},
-            {TokenType::backslash, 2},
+            {TokenType::is_equal, 2},
+
+            {TokenType::plus, 3},
+            {TokenType::minus, 3},
+
+            {TokenType::star, 4},
+            {TokenType::backslash, 4},
     };
 
     bool tokensLeft(int ahead = 1)
@@ -80,6 +83,8 @@ namespace parser
         return prec;
     }
 
+    nodeExpr parseExpr(int minPrec = 0);
+
     nodeTerm parseTerm()
     {
         nodeTerm term;
@@ -91,16 +96,23 @@ namespace parser
         {
             term.term = ident{.ident = tryConsume(TokenType::custom).value};
         }
+        else if (peek().type == TokenType::open_paren)
+        {
+            tryConsume(TokenType::open_paren);
+            term.term = new nodeExpr(parseExpr());
+            tryConsume(TokenType::close_paren);
+        }
         else
         {
-            errorHandler::error(string("Invalid term at token ") + to_string(index) + ", didn't expect token type " + to_string(peek().type));
+            errorHandler::error(string("Invalid term at token ") + to_string(index) + ", didn't expect token type " + lexer::tokenNames.at(peek().type));
         }
         return term;
     }
 
-    nodeExpr parseExpr(int minPrec = 0)
+    // default value is in function declaration
+    nodeExpr parseExpr(int minPrec)
     {
-        nodeExpr lhs = nodeExpr {.expr = parseTerm()};
+        nodeExpr lhs = nodeExpr{.expr = parseTerm()};
 
         while (true)
         {
@@ -182,9 +194,19 @@ namespace parser
                 tryConsume(TokenType::semicolon);
                 scope.body.push_back(call);
             }
+            else if (peek().type == TokenType::_if)
+            {
+                nodeStmtIf stmt;
+                tryConsume(TokenType::_if);
+                tryConsume(TokenType::open_paren);
+                stmt.expr = parseExpr();
+                tryConsume(close_paren);
+                stmt.scope = new nodeScope(parseScope());
+                scope.body.push_back(stmt);
+            }
             else
             {
-                errorHandler::error("Invalid statement in scope at token " + index);
+                errorHandler::error("Invalid statement in scope at token " + to_string(index + 1));
             }
             // scope.body.push_back(stmt);
         }
