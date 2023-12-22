@@ -239,6 +239,17 @@ namespace parser
                 stmt.scope = new nodeScope(parseScope());
                 scope.body.push_back(stmt);
             }
+            else if (peek().type == TokenType::_while)
+            {
+                nodeStmtWhile stmt;
+
+                tryConsume(TokenType::_while);
+                tryConsume(TokenType::open_paren);
+                stmt.expr = parseExpr();
+                tryConsume(TokenType::close_paren);
+                stmt.scope = new nodeScope(parseScope());
+                scope.body.push_back(stmt);
+            }
             else
             {
                 errorHandler::error("Invalid statement in scope at token " + to_string(index + 1));

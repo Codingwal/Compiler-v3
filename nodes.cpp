@@ -74,10 +74,15 @@ namespace parser
         nodeVarAssign assign;
         nodeScope *scope;
     };
+    struct nodeStmtWhile
+    {
+        nodeExpr expr;
+        nodeScope *scope;
+    };
 
     struct nodeScope
     {
-        vector<variant<nodeVarDecl, nodeVarDef, nodeVarAssign, nodeFuncCall, nodeStmtIf, nodeStmtFor>> body;
+        vector<variant<nodeVarDecl, nodeVarDef, nodeVarAssign, nodeFuncCall, nodeStmtIf, nodeStmtFor, nodeStmtWhile>> body;
     };
 
     struct nodeStructDef

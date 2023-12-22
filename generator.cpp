@@ -42,6 +42,7 @@ namespace generator
 
     int ifStmtCount = 0;
     int forLoopCount = 0;
+    int whileLoopCount = 0;
 
     int stackPointer;
 
@@ -315,6 +316,13 @@ namespace generator
 
         output << "    call " << call.funcName << endl;
 
+        int popSize = 0;
+        for (int i = 0; i < call.params.size(); i++)
+        {
+            popSize += 8;
+        }
+        output << "    add rsp, " << popSize << "\n";
+
         return data->returnType;
     }
 
@@ -352,9 +360,25 @@ namespace generator
         output << "for_loop_end" << forLoopNum << ":\n";
         pop("rax");
     }
+    void generateStmtWhile(nodeStmtWhile stmt)
+    {
+        int whileLoopNum = whileLoopCount;
+
+        output << "while_loop_start" << whileLoopNum << ":\n";
+        compTypes(generateExpr(stmt.expr), getType("byte1"));
+        pop("rax");
+        output << "    or al, al\n";
+        output << "    jz while_loop_end" << whileLoopNum << "\n";
+
+        generateScope(*stmt.scope);
+
+        output << "    jmp while_loop_start" << whileLoopNum << "\n";
+        output << "while_loop_end" << whileLoopNum << ":\n";
+    }
 
     void generateScope(nodeScope scope)
     {
+        int varCount = vars.size();
         for (auto stmt : scope.body)
         {
             if (holds_alternative<nodeVarDecl>(stmt))
@@ -381,11 +405,25 @@ namespace generator
             {
                 generateStmtFor(get<nodeStmtFor>(stmt));
             }
+            else if (holds_alternative<nodeStmtWhile>(stmt))
+            {
+                generateStmtWhile(get<nodeStmtWhile>(stmt));
+            }
             else
             {
                 throw;
             }
         }
+        int popSize = 0;
+        while (vars.size() != varCount)
+        {
+            varData data = vars.back();
+            vars.pop_back();
+
+            popSize += 8;
+        }
+        output << "    add rsp, " << popSize << "\n";
+        stackPointer += popSize;
     }
     void generateFuncDef(nodeFuncDef def)
     {

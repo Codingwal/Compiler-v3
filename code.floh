@@ -2,8 +2,11 @@ byte4 main()
 {
     byte4 x = 5;
 
-    for (byte4 i = 0; i < 10; i = i + 1)
+    byte4 i = 0;
+
+    while (i < 5)
     {
+        i = i + 1;
         x = x + 1;
     }
     exit(x);

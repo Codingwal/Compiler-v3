@@ -21,8 +21,8 @@ exit:
 main:
     push QWORD 5
     push QWORD 0
-for_loop_start0:
-    push QWORD 10
+while_loop_start0:
+    push QWORD 5
     push QWORD [rsp + 8]
     pop rax
     pop rbx
@@ -32,7 +32,7 @@ for_loop_start0:
     push rax
     pop rax
     or al, al
-    jz for_loop_end0
+    jz while_loop_end0
     push QWORD 1
     push QWORD [rsp + 8]
     pop rax
@@ -49,8 +49,10 @@ for_loop_start0:
     push rax
     pop rax
     mov [rsp + 8], rax
-    jmp for_loop_start0
-for_loop_end0:
-    pop rax
-    push QWORD [rsp + 0]
+    add rsp, 0
+    jmp while_loop_start0
+while_loop_end0:
+    push QWORD [rsp + 8]
     call exit
+    add rsp, 8
+    add rsp, 16
