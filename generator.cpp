@@ -103,7 +103,7 @@ namespace generator
         {
             string value = get<parser::bool_lit>(term.term).value;
             if (value == "true")
-            {   
+            {
                 push("QWORD -1");
             }
             else
@@ -205,6 +205,27 @@ namespace generator
 
                 compTypes(lhsType, getType("byte4"));
                 compTypes(rhsType, getType("byte4"));
+                type = getType("byte1");
+                break;
+            case TokenType::logical_or:
+                output << "    or al, bl\n";
+
+                compTypes(lhsType, getType("byte1"));
+                compTypes(rhsType, getType("byte1"));
+                type = getType("byte1");
+                break;
+            case TokenType::logical_and:
+                output << "    and al, bl\n";
+
+                compTypes(lhsType, getType("byte1"));
+                compTypes(rhsType, getType("byte1"));
+                type = getType("byte1");
+                break;
+            case TokenType::logical_xor:
+                output << "    xor al, bl\n";
+
+                compTypes(lhsType, getType("byte1"));
+                compTypes(rhsType, getType("byte1"));
                 type = getType("byte1");
                 break;
             default:

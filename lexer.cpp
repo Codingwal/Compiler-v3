@@ -30,6 +30,10 @@ namespace lexer
         less_than,
         greater_than,
 
+        logical_or,
+        logical_and,
+        logical_xor,
+
         _struct,
         _if,
         _while,
@@ -103,6 +107,10 @@ namespace lexer
             {"==", TokenType::is_equal},
             {"<", TokenType::less_than},
             {">", TokenType::greater_than},
+
+            {"||", TokenType::logical_or},
+            {"&&", TokenType::logical_and},
+            {"^", TokenType::logical_xor},
     };
 
     int lineIndex;
@@ -179,6 +187,10 @@ namespace lexer
 
         case '<':
         case '>':
+
+        case '|':
+        case '&':
+        case '^':
             return true;
         default:
             return false;

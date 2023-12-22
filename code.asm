@@ -19,44 +19,11 @@ exit:
 ; code section
 
 main:
-    push QWORD 2
-    push QWORD 3
-    pop rax
-    pop rbx
-    imul ebx
-    push rax
-    push QWORD 2
-    pop rax
-    pop rbx
-    add eax, ebx
-    push rax
-    push QWORD 2
-    push QWORD 3
-    push QWORD 2
-    pop rax
-    pop rbx
-    add eax, ebx
-    push rax
-    pop rax
-    pop rbx
-    imul ebx
-    push rax
-    push QWORD [rsp + 0]
-    push QWORD [rsp + 16]
-    pop rax
-    pop rbx
-    cmp eax, ebx
-    setle al
-    dec al
-    push rax
     push QWORD 0
-    push QWORD [rsp + 0]
-    push QWORD [rsp + 16]
+    push QWORD 0
     pop rax
     pop rbx
-    cmp eax, ebx
-    setne al
-    dec al
+    and al, bl
     push rax
     pop rax
     or al, al

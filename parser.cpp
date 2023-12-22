@@ -18,6 +18,10 @@ namespace parser
 
     map<TokenType, int> precedences =
         {
+            {TokenType::logical_or, 1},
+            {TokenType::logical_and, 1},
+            {TokenType::logical_xor, 1},
+
             {TokenType::is_equal, 2},
             {TokenType::less_than, 2},
             {TokenType::greater_than, 2},

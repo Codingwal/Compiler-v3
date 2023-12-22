@@ -1,12 +1,6 @@
 byte4 main()
 {
-    byte4 x = 2 + 3 * 2;
-    byte4 y = (2 + 3) * 2;
-    
-    byte1 z = x > y;
-    byte1 w = false;
-
-    if (z == w)
+    if (false && false)
     {
         exit(1);
     }
