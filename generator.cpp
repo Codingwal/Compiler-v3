@@ -309,6 +309,7 @@ namespace generator
         {
             errorHandler::error("Too few arguments in function call '" + call.funcName + "'.");
         }
+
         for (int i = 0; i < data->params.size(); i++)
         {
             compTypes(generateExpr(call.params.at(i)), data->params[i]);
@@ -322,6 +323,7 @@ namespace generator
             popSize += 8;
         }
         output << "    add rsp, " << popSize << "\n";
+        stackPointer += popSize;
 
         return data->returnType;
     }
@@ -428,13 +430,15 @@ namespace generator
     void generateFuncDef(nodeFuncDef def)
     {
         funcData data = {.funcName = def.funcName, .returnType = getType(def.returnType)};
-        funcs.insert({def.funcName, data});
         output << def.funcName << ":\n";
         for (int i = 0; i < def.params.size(); i++)
         {
             nodeVarDecl param = def.params[i];
             createVar(param.varName, param.varType, stackPointer + (def.params.size() - i) * 8);
+            data.params.push_back(getType(param.varType));
         }
+
+        funcs.insert({def.funcName, data});
 
         generateScope(def.body);
 
