@@ -19,8 +19,34 @@ exit:
 ; code section
 
 main:
-    push QWORD 0
-    push QWORD 0
+    push QWORD 4
+    push QWORD 4
+    pop rax
+    pop rbx
+    cmp eax, ebx
+    setg al
+    dec al
+    push rax
+    push QWORD 4
+    push QWORD 4
+    pop rax
+    pop rbx
+    cmp eax, ebx
+    setl al
+    dec al
+    push rax
+    push QWORD 3
+    push QWORD 4
+    pop rax
+    pop rbx
+    cmp eax, ebx
+    sete al
+    dec al
+    push rax
+    pop rax
+    pop rbx
+    and al, bl
+    push rax
     pop rax
     pop rbx
     and al, bl

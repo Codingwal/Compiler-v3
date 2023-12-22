@@ -189,6 +189,13 @@ namespace generator
 
                 type = getType("byte1");
                 break;
+            case TokenType::not_equal:
+                output << "    cmp eax, ebx\n";
+                output << "    sete al\n";
+                output << "    dec al\n";
+
+                type = getType("byte1");
+                break;
             case TokenType::less_than:
                 output << "    cmp eax, ebx\n";
                 output << "    setge al\n";
@@ -201,6 +208,24 @@ namespace generator
             case TokenType::greater_than:
                 output << "    cmp eax, ebx\n";
                 output << "    setle al\n";
+                output << "    dec al\n";
+
+                compTypes(lhsType, getType("byte4"));
+                compTypes(rhsType, getType("byte4"));
+                type = getType("byte1");
+                break;
+            case TokenType::less_or_equal:
+                output << "    cmp eax, ebx\n";
+                output << "    setg al\n";
+                output << "    dec al\n";
+
+                compTypes(lhsType, getType("byte4"));
+                compTypes(rhsType, getType("byte4"));
+                type = getType("byte1");
+                break;
+            case TokenType::greater_or_equal:
+                output << "    cmp eax, ebx\n";
+                output << "    setl al\n";
                 output << "    dec al\n";
 
                 compTypes(lhsType, getType("byte4"));

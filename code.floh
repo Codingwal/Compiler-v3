@@ -1,6 +1,6 @@
 byte4 main()
 {
-    if (false && false)
+    if (4 != 3 && 4 >= 4 && 4 <= 4)
     {
         exit(1);
     }

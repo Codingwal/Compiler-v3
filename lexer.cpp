@@ -27,8 +27,11 @@ namespace lexer
         backslash,
 
         is_equal,
+        not_equal,
         less_than,
         greater_than,
+        less_or_equal,
+        greater_or_equal,
 
         logical_or,
         logical_and,
@@ -77,6 +80,8 @@ namespace lexer
             {TokenType::is_equal, "is_equal"},
             {TokenType::less_than, "less_than"},
             {TokenType::greater_than, "greater_than"},
+            {TokenType::less_or_equal, "less_or_equal"},
+            {TokenType::greater_or_equal, "greater_or_equal"},
     };
 
     map<string, TokenType>
@@ -105,8 +110,11 @@ namespace lexer
             {"/", TokenType::backslash},
 
             {"==", TokenType::is_equal},
+            {"!=", TokenType::not_equal},
             {"<", TokenType::less_than},
             {">", TokenType::greater_than},
+            {"<=", TokenType::less_or_equal},
+            {">=", TokenType::greater_or_equal},
 
             {"||", TokenType::logical_or},
             {"&&", TokenType::logical_and},
@@ -179,6 +187,7 @@ namespace lexer
         case ';':
         case ',':
         case '=':
+        case '!':
 
         case '+':
         case '-':

@@ -23,8 +23,11 @@ namespace parser
             {TokenType::logical_xor, 1},
 
             {TokenType::is_equal, 2},
+            {TokenType::not_equal, 2},
             {TokenType::less_than, 2},
             {TokenType::greater_than, 2},
+            {TokenType::less_or_equal, 2},
+            {TokenType::greater_or_equal, 2},
 
             {TokenType::plus, 3},
             {TokenType::minus, 3},
