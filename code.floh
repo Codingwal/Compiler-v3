@@ -1,20 +1,4 @@
-void factorial(byte4 num)
-{
-    byte4 sum = 1;
-
-    if (num == 0)
-    {
-        exit(1);
-    }
-    while (num != 0)
-    {
-        sum = sum * num;
-        num = num - 1;
-    }
-    exit(sum);
-}
-
 byte4 main()
 {
-    factorial(10);
+    
 }

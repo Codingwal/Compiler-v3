@@ -39,12 +39,6 @@ int main()
     outputAsm << flohHeadAsm.rdbuf();
     outputAsm << output;
 
-    // code.open("code.asm", ios::out);
-    // if (code.is_open())
-    // {
-    //     code << output;
-    // }
-    // code.close();
     cout << "Done!\n";
     
     return 0;

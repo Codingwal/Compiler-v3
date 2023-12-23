@@ -300,6 +300,7 @@ namespace parser
         {
             if (peek().type == TokenType::_struct)
             {
+                throw;
             }
             else if (peek(3).type == TokenType::open_paren)
             {
@@ -310,7 +311,6 @@ namespace parser
                 errorHandler::error("Invalid statement in prog at token " + index);
             }
         }
-
         return prog;
     }
 }

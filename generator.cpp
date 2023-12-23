@@ -335,6 +335,7 @@ namespace generator
         compTypes(generateExpr(stmt.expr), getType("byte1"));
 
         int ifStmtNum = ifStmtCount;
+        ifStmtCount++;
 
         pop("rax");
         output << "    or al, al\n";
@@ -345,6 +346,7 @@ namespace generator
     void generateStmtFor(nodeStmtFor stmt)
     {
         int forLoopNum = forLoopCount;
+        forLoopCount++;
 
         generateVarDef(stmt.def);
 
@@ -365,6 +367,7 @@ namespace generator
     void generateStmtWhile(nodeStmtWhile stmt)
     {
         int whileLoopNum = whileLoopCount;
+        whileLoopCount++;
 
         output << "while_loop_start" << whileLoopNum << ":\n";
         compTypes(generateExpr(stmt.expr), getType("byte1"));
