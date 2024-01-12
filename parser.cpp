@@ -94,6 +94,8 @@ namespace parser
 
     nodeExpr parseExpr(int minPrec = 0);
 
+    nodeFuncCall parseFuncCall();
+
     nodeTerm parseTerm()
     {
         nodeTerm term;
@@ -104,6 +106,10 @@ namespace parser
         else if (peek().type == TokenType::bool_lit)
         {
             term.term = bool_lit{tryConsume(TokenType::bool_lit).value};
+        }
+        else if (peek().type == TokenType::custom && peek(2).type == TokenType::open_paren)
+        {
+            term.term = new nodeFuncCall(parseFuncCall());
         }
         else if (peek().type == TokenType::custom)
         {
@@ -165,6 +171,29 @@ namespace parser
             tryConsume(TokenType::semicolon);
         return assign;
     }
+    nodeFuncCall parseFuncCall()
+    {
+        // nodeFuncCall
+        nodeFuncCall call;
+        call.funcName = consume().value;
+        tryConsume(TokenType::open_paren);
+
+        // Parse parameters
+        while (peek().type != TokenType::close_paren)
+        {
+            call.params.push_back(parseExpr());
+
+            if (peek().type == TokenType::close_paren)
+            {
+                break;
+            };
+            tryConsume(TokenType::comma);
+        };
+
+        tryConsume(TokenType::close_paren);
+
+        return call;
+    }
 
     nodeScope parseScope()
     {
@@ -195,26 +224,16 @@ namespace parser
             }
             else if (peek().type == TokenType::custom && peek(2).type == TokenType::open_paren)
             {
-                // nodeFuncCall
-                nodeFuncCall call;
-                call.funcName = consume().value;
-                tryConsume(TokenType::open_paren);
-
-                // Parse parameters
-                while (peek().type != TokenType::close_paren)
-                {
-                    call.params.push_back(parseExpr());
-
-                    if (peek().type == TokenType::close_paren)
-                    {
-                        break;
-                    };
-                    tryConsume(TokenType::comma);
-                };
-
-                tryConsume(TokenType::close_paren);
+                scope.body.push_back(parseFuncCall());
                 tryConsume(TokenType::semicolon);
-                scope.body.push_back(call);
+            }
+            else if (peek().type == TokenType::_return)
+            {
+                nodeStmtReturn stmt;
+                tryConsume(TokenType::_return);
+                stmt.expr = parseExpr();
+                tryConsume(TokenType::semicolon);
+                scope.body.push_back(stmt);
             }
             else if (peek().type == TokenType::_if)
             {

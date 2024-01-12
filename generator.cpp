@@ -30,8 +30,8 @@ namespace generator
 
     map<string, typeData> types =
         {
-            {"byte4", {.typeName = "byte4", .size = 4}},
-            {"byte1", {.typeName = "byte1", .size = 1}},
+            {"byte4", {.typeName = "byte4", .size = 8}},
+            {"byte1", {.typeName = "byte1", .size = 8}},
             {"void", {.typeName = "void"}},
     };
     map<string, funcData> funcs =
@@ -48,15 +48,39 @@ namespace generator
 
     stringstream output;
 
-    void push(string reg)
+    string getReg(string reg, int size)
+    {
+        switch (size)
+        {
+        case 1:
+            return reg + 'l';
+        case 2:
+            return reg + 'x';
+        case 4:
+            return "e" + reg + 'x';
+        case 8:
+            return "r" + reg + 'x';
+        default:
+            throw;
+        }
+    }
+    void push(string reg, int size)
     {
         output << "    push " << reg << endl;
-        stackPointer -= 8;
+        stackPointer -= size;
     }
-    void pop(string reg)
+    void push(char reg, int size)
+    {
+        push(getReg({reg}, size), size);
+    }
+    void pop(string reg, int size)
     {
         output << "    pop " << reg << endl;
-        stackPointer += 8;
+        stackPointer += size;
+    }
+    void pop(char reg, int size)
+    {
+        pop(getReg({reg}, size), size);
     }
     typeData *getType(string varType)
     {
@@ -92,33 +116,56 @@ namespace generator
         }
     }
 
+    string getWord(int size)
+    {
+        switch (size)
+        {
+        case 1:
+            return "BYTE";
+        case 2:
+            return "WORD";
+        case 4:
+            return "DWORD";
+        case 8:
+            return "QWORD";
+        default:
+            throw;
+        }
+    }
+
     typeData *generateExpr(nodeExpr expr);
+    typeData *generateFuncCall(nodeFuncCall call, bool returnValue);
 
     typeData *generateTerm(nodeTerm term)
     {
         if (std::holds_alternative<parser::int_lit>(term.term))
         {
-            push("QWORD " + get<parser::int_lit>(term.term).value);
+            push("QWORD " + get<parser::int_lit>(term.term).value, 8);
             return getType("byte4");
         }
         if (std::holds_alternative<parser::bool_lit>(term.term))
         {
             string value = get<parser::bool_lit>(term.term).value;
+            int size = types["byte1"].size;
             if (value == "true")
             {
-                push("QWORD -1");
+                push(getWord(size) + " -1", size);
             }
             else
             {
-                push("QWORD 0");
+                push(getWord(size) + " 0", size);
             }
             return getType("byte1");
+        }
+        else if (std::holds_alternative<nodeFuncCall *>(term.term))
+        {
+            return generateFuncCall(*get<nodeFuncCall *>(term.term), true);
         }
         else if (std::holds_alternative<ident>(term.term))
         {
             varData *data = getVar(get<ident>(term.term).ident);
             int varStackPos = data->stackPos;
-            push(string("QWORD [rsp + ") + to_string(varStackPos - stackPointer) + "]");
+            push(getWord(data->varType->size) + " [rsp + " + to_string(varStackPos - stackPointer) + "]", data->varType->size);
             return data->varType;
         }
         else if (std::holds_alternative<nodeExpr *>(term.term))
@@ -152,104 +199,166 @@ namespace generator
             free(binExpr.lhs);
 
             // binExpr
-            pop("rax");
-            pop("rbx");
-
             switch (binExpr.op)
             {
             case TokenType::plus:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    add eax, ebx\n";
+
+                push('a', 8);
 
                 compTypes(lhsType, getType("byte4"));
                 compTypes(rhsType, getType("byte4"));
                 type = getType("byte4");
                 break;
             case TokenType::minus:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    sub eax, ebx\n";
+
+                push('a', 8);
 
                 type = getType("byte4");
                 break;
             case TokenType::star:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    imul ebx\n";
+
+                push('a', 8);
 
                 compTypes(lhsType, getType("byte4"));
                 compTypes(rhsType, getType("byte4"));
                 type = getType("byte4");
                 break;
             case TokenType::backslash:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    xor rdx, rdx\n";
                 output << "    div ebx\n";
+
+                push('a', 8);
 
                 compTypes(lhsType, getType("byte4"));
                 compTypes(rhsType, getType("byte4"));
                 type = getType("byte4");
                 break;
             case TokenType::is_equal:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    cmp eax, ebx\n";
                 output << "    setne al\n";
                 output << "    dec al\n";
 
+                push('a', 8);
+
                 type = getType("byte1");
                 break;
             case TokenType::not_equal:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    cmp eax, ebx\n";
                 output << "    sete al\n";
                 output << "    dec al\n";
 
+                push('a', 8);
+
                 type = getType("byte1");
                 break;
             case TokenType::less_than:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    cmp eax, ebx\n";
                 output << "    setge al\n";
                 output << "    dec al\n";
+
+                push('a', 8);
 
                 compTypes(lhsType, getType("byte4"));
                 compTypes(rhsType, getType("byte4"));
                 type = getType("byte1");
                 break;
             case TokenType::greater_than:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    cmp eax, ebx\n";
                 output << "    setle al\n";
                 output << "    dec al\n";
+
+                push('a', 8);
 
                 compTypes(lhsType, getType("byte4"));
                 compTypes(rhsType, getType("byte4"));
                 type = getType("byte1");
                 break;
             case TokenType::less_or_equal:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    cmp eax, ebx\n";
                 output << "    setg al\n";
                 output << "    dec al\n";
+
+                push('a', 8);
 
                 compTypes(lhsType, getType("byte4"));
                 compTypes(rhsType, getType("byte4"));
                 type = getType("byte1");
                 break;
             case TokenType::greater_or_equal:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    cmp eax, ebx\n";
                 output << "    setl al\n";
                 output << "    dec al\n";
+
+                push('a', 8);
 
                 compTypes(lhsType, getType("byte4"));
                 compTypes(rhsType, getType("byte4"));
                 type = getType("byte1");
                 break;
             case TokenType::logical_or:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    or al, bl\n";
+
+                push('a', 8);
 
                 compTypes(lhsType, getType("byte1"));
                 compTypes(rhsType, getType("byte1"));
                 type = getType("byte1");
                 break;
             case TokenType::logical_and:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    and al, bl\n";
+
+                push('a', 8);
 
                 compTypes(lhsType, getType("byte1"));
                 compTypes(rhsType, getType("byte1"));
                 type = getType("byte1");
                 break;
             case TokenType::logical_xor:
+                pop('a', 8);
+                pop('b', 8);
+
                 output << "    xor al, bl\n";
+
+                push('a', 8);
 
                 compTypes(lhsType, getType("byte1"));
                 compTypes(rhsType, getType("byte1"));
@@ -258,9 +367,6 @@ namespace generator
             default:
                 errorHandler::error("Invalid operator " + lexer::tokenNames.at(binExpr.op));
             }
-
-            push("rax");
-
             return type;
         }
         else
@@ -272,7 +378,8 @@ namespace generator
     void generateVarDecl(nodeVarDecl decl)
     {
         // Reserve space for var
-        push("0");
+        output << "    add rsp, " << getType(decl.varType)->size << "\n";
+        stackPointer += getType(decl.varType)->size;
 
         createVar(decl.varName, decl.varType, stackPointer);
 
@@ -292,12 +399,13 @@ namespace generator
 
         compTypes(generateExpr(assign.expr), varData->varType);
 
-        pop("rax");
+        pop(getReg("a", varData->varType->size), varData->varType->size);
 
         int varOffset = varData->stackPos - stackPointer;
-        output << "    mov [rsp + " << varOffset << "], rax\n";
+
+        output << "    mov [rsp + " << varOffset << "], " << getReg("a", varData->varType->size) << "\n";
     }
-    typeData *generateFuncCall(nodeFuncCall call)
+    typeData *generateFuncCall(nodeFuncCall call, bool returnValue)
     {
         if (funcs.count(call.funcName) == 0)
         {
@@ -309,6 +417,9 @@ namespace generator
         {
             errorHandler::error("Too few arguments in function call '" + call.funcName + "'.");
         }
+
+        output << "    sub rsp, 8\n";
+        stackPointer -= 8;
 
         for (int i = 0; i < data->params.size(); i++)
         {
@@ -322,6 +433,10 @@ namespace generator
         {
             popSize += 8;
         }
+        if (!returnValue)
+        {
+            popSize += data->returnType->size;
+        }
         output << "    add rsp, " << popSize << "\n";
         stackPointer += popSize;
 
@@ -330,6 +445,12 @@ namespace generator
 
     void generateScope(nodeScope scope);
 
+    void generateStmtReturn(nodeStmtReturn stmt)
+    {
+        generateVarAssign({.varName = "_returnVal", .expr = stmt.expr});
+        output << "    ret\n";
+    }
+
     void generateStmtIf(nodeStmtIf stmt)
     {
         compTypes(generateExpr(stmt.expr), getType("byte1"));
@@ -337,7 +458,7 @@ namespace generator
         int ifStmtNum = ifStmtCount;
         ifStmtCount++;
 
-        pop("rax");
+        pop('a', 8);
         output << "    or al, al\n";
         output << "    jz if_stmt_end" << ifStmtNum << "\n";
         generateScope(*stmt.scope);
@@ -352,7 +473,8 @@ namespace generator
 
         output << "for_loop_start" << forLoopNum << ":\n";
         compTypes(generateExpr(stmt.expr), getType("byte1"));
-        pop("rax");
+        pop('a', 8);
+
         output << "    or al, al\n";
         output << "    jz for_loop_end" << forLoopNum << "\n";
 
@@ -362,7 +484,7 @@ namespace generator
 
         output << "    jmp for_loop_start" << forLoopNum << "\n";
         output << "for_loop_end" << forLoopNum << ":\n";
-        pop("rax");
+        pop("eax", 8);
     }
     void generateStmtWhile(nodeStmtWhile stmt)
     {
@@ -371,7 +493,8 @@ namespace generator
 
         output << "while_loop_start" << whileLoopNum << ":\n";
         compTypes(generateExpr(stmt.expr), getType("byte1"));
-        pop("rax");
+        pop('a', 8);
+
         output << "    or al, al\n";
         output << "    jz while_loop_end" << whileLoopNum << "\n";
 
@@ -400,7 +523,11 @@ namespace generator
             }
             else if (holds_alternative<nodeFuncCall>(stmt))
             {
-                generateFuncCall(get<nodeFuncCall>(stmt));
+                generateFuncCall(get<nodeFuncCall>(stmt), false);
+            }
+            else if (holds_alternative<nodeStmtReturn>(stmt))
+            {
+                generateStmtReturn(get<nodeStmtReturn>(stmt));
             }
             else if (holds_alternative<nodeStmtIf>(stmt))
             {
@@ -433,11 +560,14 @@ namespace generator
     void generateFuncDef(nodeFuncDef def)
     {
         funcData data = {.funcName = def.funcName, .returnType = getType(def.returnType)};
+
+        createVar("_returnVal", def.returnType, stackPointer + 8 + def.params.size() * 8);
+
         output << def.funcName << ":\n";
         for (int i = 0; i < def.params.size(); i++)
         {
             nodeVarDecl param = def.params[i];
-            createVar(param.varName, param.varType, stackPointer + (def.params.size() - i) * 8);
+            createVar(param.varName, param.varType, stackPointer + (def.params.size() - i) * 8); // + 1 for return value
             data.params.push_back(getType(param.varType));
         }
 
@@ -445,7 +575,7 @@ namespace generator
 
         generateScope(def.body);
 
-        for (int i = 0; i < def.params.size(); i++)
+        for (int i = 0; i < def.params.size() + 1; i++) // params.size() + 1 to pop all params and the return val
         {
             vars.pop_back();
         }

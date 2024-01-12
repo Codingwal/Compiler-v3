@@ -27,9 +27,10 @@ namespace parser
     {
         string ident;
     };
+    struct nodeFuncCall;
     struct nodeTerm
     {
-        variant<int_lit, bool_lit, ident, nodeExpr *> term;
+        variant<int_lit, bool_lit, nodeFuncCall *, ident, nodeExpr *> term;
     };
     struct nodeExpr
     {
@@ -62,6 +63,10 @@ namespace parser
 
     struct nodeScope;
 
+    struct nodeStmtReturn
+    {
+        nodeExpr expr;
+    };
     struct nodeStmtIf
     {
         nodeExpr expr;
@@ -82,7 +87,7 @@ namespace parser
 
     struct nodeScope
     {
-        vector<variant<nodeVarDecl, nodeVarDef, nodeVarAssign, nodeFuncCall, nodeStmtIf, nodeStmtFor, nodeStmtWhile>> body;
+        vector<variant<nodeVarDecl, nodeVarDef, nodeVarAssign, nodeFuncCall, nodeStmtReturn, nodeStmtIf, nodeStmtFor, nodeStmtWhile>> body;
     };
 
     struct nodeStructDef

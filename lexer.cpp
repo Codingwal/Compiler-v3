@@ -37,6 +37,7 @@ namespace lexer
         logical_and,
         logical_xor,
 
+        _return,
         _struct,
         _if,
         _while,
@@ -67,6 +68,7 @@ namespace lexer
             {TokenType::comma, "comma"},
             {TokenType::equal, "equal"},
 
+            {TokenType::_return, "_return"},
             {TokenType::_struct, "_struct"},
             {TokenType::_if, "_if"},
             {TokenType::_while, "_while"},
@@ -87,6 +89,7 @@ namespace lexer
     map<string, TokenType>
         keywords =
             {
+                {"return", TokenType::_return},
                 {"struct", TokenType::_struct},
                 {"if", TokenType::_if},
                 {"while", TokenType::_while},

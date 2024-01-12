@@ -1,4 +1,18 @@
+byte4 factorial(byte4 num)
+{
+    if (num == 0)
+    {
+        return 1;
+    }
+    if (num < 0)
+    {
+        return 0 - 1;
+    }
+    return factorial(num - 1) * num;
+}
+
 byte4 main()
 {
-    
+    byte4 x = factorial(10);
+    exit(x);
 }
